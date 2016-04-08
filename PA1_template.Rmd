@@ -1,85 +1,137 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output:
-  html_document:
-  keep_md: true
+title: 'Reproducible Research: Peer Assesment1'
+author: "Antonio"
+date: "8 de abril de 2016"
+output: 
+    html_document:
+    keep_md: true
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
-## 1. - Loading and preprocessing the data
-#setwd(./) set working directory to where the file is located
-# 1.1 Load Data 
+###1.1 Load Data and preprocessing the data
+
+```{r echo=TRUE}
+setwd("C:/Users/Antonio/R/C5")
 datos<-read.csv("activity.csv")
-#1.2 Process/transform the data
 summary(datos)
 datos$date<-as.Date(datos$date)
-#find % number of NA's in data set
+```
+Find the % number of NA's in data set
+
+```{r echo=TRUE}
 mean(is.na(datos$steps))
-#the number is high, we look for a pattern
+```
+
+The number is high, we look for a pattern
+
+```{r echo=TRUE}
 steps<-datos$steps
 nasteps<-is.na(steps)
 dias<-datos$date
 diasna<-dias[nasteps]
 hist(diasna,"day")
-#the NA's are concentrated in 8 sample days
-#we see what day of the week to see if there is repetition, sequence, Maybe data missing every Tuesday? etc
-unique(sapply(dias[nasteps],weekdays))
+```
+The NA's are concentrated in 8 sample days we see what day of the week to see if there is repetition, sequence, Maybe data missing every Tuesday? etc
 
-# 2. What is mean total number of steps taken per day?
-# 2.1 calculate total number of steps per day (NA eliminated)
+```{r}
+unique(sapply(dias[nasteps],weekdays))
+```
+
+THe days of the week do not tell us much (not the same day of week, and from Histogram not same week)
+
+###2. What is mean total number of steps taken per day?
+
+2.1 calculate total number of steps per day (NA eliminated)
+Histogram of Total Steps Per Day
+```{r echo=TRUE}
 totalstepsday<-with(datos,tapply(steps,date,sum,na.rm=TRUE))
-# 2.2 Plot Histogram and Barplot
-# Histogram of Total Steps Per Day
-par(mfcol=c(1,1))
 hist(totalstepsday, main = " Histogram of Steps per Day",xlab = "Total Steps per Day")
 abline(v=median(totalstepsday),lwd=3, col="Blue")
 abline(v=mean(totalstepsday),lwd=3, col="red")
 legend("topright",c("Median","Mean"),col = c("blue","red"),lwd = 3)
-#Boxplot of Total Steps per Day
+```
+Boxplot of Total Steps per Day
+```{r echo=TRUE}
 boxplot(totalstepsday, main = " Steps per Day",ylab = "Total Steps per Day")
-# 2.3 Calaculate and report the mean and median, mean of Total Steps per day and summary
+```
+2.3 Calaculate and report the mean and median, mean of Total Steps per day and summary
+
+```{r echo=TRUE}
 summary(totalstepsday)
 print(median(totalstepsday))
 print(mean(totalstepsday))
-# 3 What is the average daily activity pattern?
-# 3.1 calculate and Plot the average for time intervals across different dates
+```
+
+### 3 What is the average daily activity pattern?
+3.1 calculate and Plot the average for time intervals across different dates
+
+```{r echo=TRUE}
 avginterv<-with(datos,tapply(steps,interval,mean,na.rm=TRUE))
 plot(names(avginterv),avginterv,type = "l",xlab = "Interval", ylab = "Avg. Number Steps per Day", main = "Time Series of Avg. Steps")
-# 3.2 Find the 5-minute interval that contains the maximun (average) number of Steps
+```
+
+3.2 Find the 5-minute interval that contains the maximun (average) number of Steps
+
+```{r echo=TRUE}
 print(names(which.max(avginterv)))
-# 4 Imputing missing values
-# 4.1 Calculate and report total number of missing values in dataset
+```
+### 4 Imputing missing values
+4.1 Calculate and report total number of missing values in dataset
+
+```{r echo=TRUE}
 print(sum(is.na(datos$steps)))
-# 4.2 Divise a stratgy for missing values in dataset
-# 4.2.1 I will use the average steps per interval calculated over the dataset days to fill in data
-# I create a dataframe with the previously calulated data
+```
+
+4.2 Divise a stratgy for missing values in dataset
+
+*4.2.1 I will use the average steps per interval calculated over the dataset days to fill in data
+
++I create a dataframe with the previously calulated data
+
++I create an variable holding the positions in which NA data appears
+
++I create a new dataset which is equal to original data
+
++Change values for NA in steps variable
+```{r echo=TRUE}
 avgint<-data.frame(interval=names(avginterv),average=avginterv)
-# 4.2.2 I create an variable holding the positions in which NA data appears 
 acambiar<-which(nasteps)
-# 4.3 I create a new dataset which is equal to original data
 datos1<-data.frame(datos)
-# 4.3.1 Change values for NA in steps variable
 for (x in acambiar){
     y=datos$interval[x]
     datos1$steps[x]=avgint$average[avgint$interval==y]
 }
-# 4.4 Make a histogram of total steps taken each day and calculate and report media.
+```
+4.4 Make a histogram of total steps taken each day and calculate and report media.
+
+```{r echo=TRUE}
 totalstepsday1<-with(datos1,tapply(steps,date,sum,na.rm=TRUE))
-# Histogram of Total Steps Per Day
 hist(totalstepsday1, main = " Histogram of Steps per Day",xlab = "Total Steps per Day")
 abline(v=median(totalstepsday1),lwd=6, col="Blue")
 abline(v=mean(totalstepsday1),lwd=2, col="red")
 legend("topright",c("Median","Mean"),col = c("blue","red"),lwd = 2)
-#Boxplot of Total Steps per Day
+```
+And a Boxplot
+```{r echo=TRUE}
 boxplot(totalstepsday1, main = " Steps per Day",ylab = "Total Steps per Day")
-#  Calaculate and report the mean and median, mean of Total Steps per day and summary
+```
+Calculate and report the mean and median, mean of Total Steps per day and summary
+
+```{r echo=TRUE}
 summary(totalstepsday1)
 print(median(totalstepsday1))
 print(mean(totalstepsday1))
-# The main impact of using this method of filling data is that the median increases and is now equal to mean. The histogram appear
-# to be more "gaussin-normal"
-# 5 Are there differences in activity patterns between weekdays and weekends?
-# 5.1 create a new factor variable with two levels - weekeday and weekend
+```
+The main impact of using this method of filling data is that the median increases and is now equal to mean. The histogram ### appear to be more "gaussin-normal"
+
+### 5 Are there differences in activity patterns between weekdays and weekends?
+
+5.1 create a new factor variable with two levels - weekeday and weekend
+
+```{r echo=TRUE}
 datos1$dayweek<-sapply(datos1$date,weekdays)
 days<-unique(datos1$dayweek)
 weekday<-days[0:5]
@@ -94,20 +146,24 @@ cambio<-function(x){
 datos1$wow<-sapply(datos1$dayweek,cambio)
 week<-subset(datos1,datos1$wow=="Weekday")
 nweek<-subset(datos1,datos1$wow=="Weekend")
-# 5.1 2.	Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the 
-#average number of steps taken, averaged across all weekday days or weekend days (y-axis).
+```
+5.1 2.	Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
+
+```{r echo=TRUE}
 avgweek<-with(week,tapply(steps,interval,mean))
 avgweekend<-with(nweek,tapply(steps,interval,mean))
-# par(mfcol=c(2,1))
-# plot(names(avgweek),avgweek,type = "l",xlab = "", ylab = "" )
-# plot(names(avgweekend),avgweekend,type = "l",,xlab = "", ylab = "")
 davgweek<-data.frame(Interval=as.numeric(names(avgweek)),average=as.numeric(avgweek))
 davgweek$day<-"weekday"
 davgweekend<-data.frame(Interval=as.numeric(names(avgweekend)),average=as.numeric(avgweekend))
 davgweekend$day<-"weekend"
 plotsdata<-rbind(davgweek,davgweekend)
-# library(ggplot2)
-# g<-ggplot(plotsdata,aes(x=interval,y=Stepps))+geom_line()
-# g+facet_grid(day~.)+labs(title="Avg. Number of Steps per Interval",x="Interval",y="Avg Number of Steps")
 library(lattice)
 xyplot(average~Interval|day, data = plotsdata, layout=c(1,2), type="l", xlab = "Interval",ylab = "Avg. Number of Steps",xlim = c(0.500,1000,1500,2000,2500))
+```
+
+
+
+
+
+
+
